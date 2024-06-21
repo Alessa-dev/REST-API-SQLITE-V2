@@ -1,9 +1,9 @@
 const sqlite3 = require('sqlite3').verbose();
-const db = new sqlite3.Database(':memory:');
+const db = new sqlite3.Database('usuarios.db'); 
 
 // Crear tabla de usuarios
 db.serialize(() => {
-    db.run(`CREATE TABLE users (
+    db.run(`CREATE TABLE IF NOT EXISTS users (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         name TEXT,
         email TEXT,
@@ -13,3 +13,4 @@ db.serialize(() => {
 });
 
 module.exports = db;
+
