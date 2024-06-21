@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CRUD App</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        table, th, td {
+            border: 1px solid black;
+        }
+        th, td {
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        form {
+            margin-bottom: 20px;
+        }
+        input[type="text"], input[type="number"], input[type="email"] {
+            padding: 8px;
+            margin: 4px;
+            width: 200px;
+        }
+        button {
+            padding: 8px 16px;
+            margin: 4px;
+        }
+    </style>
+</head>
+<body>
+    <h1>CRUD App</h1>
+    <form id="userForm">
+        <input type="hidden" id="userId" name="id">
+        <input type="text" id="name" name="name" placeholder="Name" required>
+        <input type="email" id="email" name="email" placeholder="Email" required>
+        <input type="number" id="age" name="age" placeholder="Age" required>
+        <input type="text" id="address" name="address" placeholder="Address" required>
+        <button type="submit">Add User</button>
+        <button type="button" id="updateButton" style="display: none;">Update User</button>
+    </form>
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Age</th>
+                <th>Address</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody id="userTableBody">
+            <!-- User rows will go here -->
+        </tbody>
+    </table>
+
+    <script>
+        const apiUrl = '/api/users';
+
+        document.addEventListener('DOMContentLoaded', () => {
+            fetchUsers();
+        });
+
+        document.getElementById('userForm').addEventListener('submit', event => {
+            event.preventDefault();
+            const userId = document.getElementById('userId').value;
+            if (userId) {
+                updateUser(userId);
+            } else {
+                createUser();
+            }
+        });
+
+        document.getElementById('updateButton').addEventListener('click', () => {
+            const userId = document.getElementById('userId').value;
+            updateUser(userId);
+        });
+
+        function fetchUsers() {
+            fetch(apiUrl)
+                .then(response => response.json())
+                .then(data => {
+                    const userTableBody = document.getElementById('userTableBody');
+                    userTableBody.innerHTML = '';
+                    data.forEach(user => {
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td>${user.id}</td>
+                            <td>${user.name}</td>
+                            <td>${user.email}</td>
+                            <td>${user.age}</td>
+                            <td>${user.address}</td>
+                            <td>
+                                <button onclick="editUser(${user.id})">Edit</button>
+                                <button onclick="deleteUser(${user.id})">Delete</button>
+                            </td>
+                        `;
+                        userTableBody.appendChild(row);
+                    });
+                });
+        }
+
+        function createUser() {
+            const user = {
+                name: document.getElementById('name').value,
+                email: document.getElementById('email').value,
+                age: document.getElementById('age').value,
+                address: document.getElementById('address').value,
+            };
+
+            fetch(apiUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(user)
+            })
+            .then(response => response.json())
+            .then(() => {
+                fetchUsers();
+                clearForm();
+            });
+        }
+
+        function updateUser(userId) {
+            const user = {
+                name: document.getElementById('name').value,
+                email: document.getElementById('email').value,
+                age: document.getElementById('age').value,
+                address: document.getElementById('address').value,
+            };
+
+            fetch(`${apiUrl}/${userId}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(user)
+            })
+            .then(() => {
+                fetchUsers();
+                clearForm();
+                document.getElementById('updateButton').style.display = 'none';
+                document.getElementById('userForm').querySelector('button[type="submit"]').style.display = 'inline';
+            });
+        }
+
+        function deleteUser(userId) {
+            fetch(`${apiUrl}/${userId}`, {
+                method: 'DELETE'
+            })
+            .then(() => {
+                fetchUsers();
+            });
+        }
+
+        function editUser(userId) {
+            fetch(`${apiUrl}/${userId}`)
+                .then(response => response.json())
+                .then(user => {
+                    document.getElementById('userId').value = user.id;
+                    document.getElementById('name').value = user.name;
+                    document.getElementById('email').value = user.email;
+                    document.getElementById('age').value = user.age;
+                    document.getElementById('address').value = user.address;
+                    document.getElementById('updateButton').style.display = 'inline';
+                    document.getElementById('userForm').querySelector('button[type="submit"]').style.display = 'none';
+                });
+        }
+
+        function clearForm() {
+            document.getElementById('userId').value = '';
+            document.getElementById('name').value = '';
+            document.getElementById('email').value = '';
+            document.getElementById('age').value = '';
+            document.getElementById('address').value = '';
+        }
+    </script>
+</body>
+</html>
